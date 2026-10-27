@@ -1,14 +1,15 @@
 import { createApp } from './app.mjs';
 import { config } from './config/env.mjs';
 import { seedDemoData } from './db/demoData.mjs';
-import { Event, sequelize } from './models/index.mjs';
+import { sequelize } from './models/index.mjs';
+import { eventRepository } from './repositories/eventRepository.mjs';
 import { logger } from './utils/logger.mjs';
 
 async function start() {
   await sequelize.sync();
 
   // First start on a fresh clone: fill the empty database so the UI has something to show.
-  if ((await Event.count()) === 0) {
+  if ((await eventRepository.count()) === 0) {
     await seedDemoData();
     logger.info('Empty database, demo data added');
   }

@@ -11,7 +11,7 @@ export const eventRepository = {
     return event ? event.toJSON() : null;
   },
 
-  async count() {
+  count() {
     return Event.count();
   },
 
