@@ -1,14 +1,21 @@
-import { app, Event, seedDemoData, sequelize } from './app.mjs';
+import { createApp } from './app.mjs';
+import { config } from './config/env.mjs';
+import { seedDemoData } from './db/demoData.mjs';
+import { Event, sequelize } from './models/index.mjs';
+import { logger } from './utils/logger.mjs';
 
-await sequelize.sync();
+async function start() {
+  await sequelize.sync();
 
-// First start on a fresh clone: fill the empty database so the UI has something to show.
-if ((await Event.count()) === 0) {
-  await seedDemoData();
-  console.log('Empty database – demo data added');
+  // First start on a fresh clone: fill the empty database so the UI has something to show.
+  if ((await Event.count()) === 0) {
+    await seedDemoData();
+    logger.info('Empty database, demo data added');
+  }
+
+  createApp().listen(config.port, () => {
+    logger.info(`Campus Events API running on port ${config.port}`);
+  });
 }
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`Campus Events API running on http://localhost:${port}/api`);
-});
+start();

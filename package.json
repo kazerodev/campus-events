@@ -12,12 +12,14 @@
     "web"
   ],
   "scripts": {
+    "start": "node api/src/server.mjs",
     "dev": "concurrently --names api,web --prefix-colors blue,magenta \"npm run dev -w api\" \"npm run dev -w web\"",
     "seed": "npm run seed -w api",
     "test": "npm test --workspaces",
     "lint": "eslint .",
     "check": "npm run lint && npm test",
-    "build": "npm run build -w web"
+    "build": "npm run build -w web",
+    "build:check": "node -e \"require('fs').accessSync('web/dist/index.html')\""
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

@@ -55,24 +55,26 @@ so the browser only talks to one address and you don't need CORS.
 
 ### api/
 
-**Today** the whole API lives in one file:
+The API is split in layers (see `SOLUTION.md` for the why):
 
 ```
-api/src/app.mjs      settings, database + models, validation, routes, business rules, error handling
-api/src/server.mjs   starts the app (and adds demo data to an empty database)
-api/src/seed.mjs     npm run seed: reset the database
+api/src/
+  app.mjs        createApp(): wires repositories → services → controllers → routes
+  server.mjs     starts the app (and adds demo data to an empty database)
+  seed.mjs       npm run seed: reset the database
+  config/        env.mjs, the only place that reads process.env
+  routes/        URL + validation → controller        (no logic)
+  controllers/   HTTP in/out, picks the status code    (thin)
+  services/      business rules, throws AppErrors      (no Express, no SQL)
+  repositories/  data access via Sequelize             (no rules)
+  models/ db/    tables, connection, demo data
+  middleware/    validation, request log, error handler
+  cache/         in-memory cache for the GET endpoints
+  mail/          confirmation mail (SMTP or the lab mailer)
+  errors/        AppError
 ```
 
-Prefered:
-
-```
-routes/        URL + validation → controller        (no logic)
-controllers/   HTTP in/out, picks the status code    (thin)
-services/      business rules, throws AppErrors      (no Express, no SQL)
-repositories/  data access via Sequelize             (no rules)
-models/ db/    tables, connection, demo data
-config/        the only place that reads process.env
-```
+In production `npm start` serves the built frontend (`web/dist`) and the API from one Node process.
 
 The integration tests in `api/tests/integration` only talk HTTP. They pass before your refactoring,
 and they must still pass after it, without changing them.

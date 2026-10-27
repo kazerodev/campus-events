@@ -7,7 +7,7 @@ Monorepo with npm workspaces. `api/`: Node 22, Express 5, ES modules (`.mjs`), S
 `web/`: Vue 3 (`<script setup>`, JavaScript, no TypeScript), Vue Router, Vite, Vitest + @vue/test-utils.
 
 ## Map – read only the files you need
-- API: today everything is in `api/src/app.mjs`; `server.mjs` starts it, `seed.mjs` resets the data.
+- API: `api/src/app.mjs` wires the layers (routes, controllers, services, repositories); `server.mjs` starts it, `seed.mjs` resets the data.
 - API tests: `api/tests/integration/` (HTTP only), shared setup in `api/tests/helpers/testApp.mjs`
 - Frontend API calls: `web/src/api/events.js`; pages: `web/src/views/`; components: `web/src/components/`; tests: `web/tests/`
 - Never read: `package-lock.json`, `node_modules/`, `dist/`, `*.sqlite`
