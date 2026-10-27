@@ -6,15 +6,13 @@ export function createEventService({ events, registrations, cache }) {
       return cache.getOrSet('events', () => events.findAll());
     },
 
-    async getById(id) {
-      const event = await cache.getOrSet(`events:${id}`, async () => {
-        const found = await events.findById(id);
-        if (!found) return null;
+    getById(id) {
+      return cache.getOrSet(`events:${id}`, async () => {
+        const event = await events.findById(id);
+        if (!event) throw notFound(`Event with id ${id} not found`);
         const registered = await registrations.countByEvent(id);
-        return { ...found, registered, spotsLeft: Math.max(found.capacity - registered, 0) };
+        return { ...event, registered, spotsLeft: Math.max(event.capacity - registered, 0) };
       });
-      if (!event) throw notFound(`Event with id ${id} not found`);
-      return event;
     },
 
     async create(data) {

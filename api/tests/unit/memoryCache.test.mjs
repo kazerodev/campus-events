@@ -40,6 +40,20 @@ describe('memory cache', () => {
     assert.equal(value, 2);
   });
 
+  it('does not keep a value that was loaded while the cache was cleared', async () => {
+    const cache = createMemoryCache({ ttlSeconds: 60 });
+    let finishLoad;
+    const slowLoad = () => new Promise((resolve) => { finishLoad = resolve; });
+
+    const pending = cache.getOrSet('key', slowLoad);
+    cache.clear();
+    finishLoad('old value');
+    await pending;
+    const value = await cache.getOrSet('key', async () => 'new value');
+
+    assert.equal(value, 'new value');
+  });
+
   it('does not cache a loader that throws', async () => {
     const cache = createMemoryCache({ ttlSeconds: 60 });
 

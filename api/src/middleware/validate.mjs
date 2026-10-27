@@ -9,7 +9,7 @@ export function validate(schemas) {
     req.valid = {};
     for (const part of ['params', 'body']) {
       if (!schemas[part]) continue;
-      const result = schemas[part].safeParse(req[part]);
+      const result = schemas[part].safeParse(req[part] ?? {});
       if (!result.success) {
         return next(validationError(toDetails(result.error, part)));
       }

@@ -18,7 +18,11 @@ The validation code was copied in every route, now it is one `validate()` middle
 
 The original integration tests were not changed and still pass.
 
-I also fixed one bug: the capacity check used `count > capacity`, so an event with 2 seats accepted 3 people. Now it is `>=` (with a test).
+Bugs I found and fixed (each one has a test):
+
+- The capacity check used `count > capacity`, so an event with 2 seats accepted 3 people. Now it is `>=`.
+- When 5 people registered at the same moment for the last seat, all 5 got in, and the same email sent 3 times at once was stored 3 times. The code first checks and then saves, and other requests could run in between. Now registrations run one by one (a small queue in `registrationService`), so the check and the save always happen together. This works because the app runs as one process, the same reason the cache can live in memory.
+- When a field was missing, the message was technical ("expected string, received undefined"). Now it says "Enter a title", like the other messages.
 
 ## 2. Confirmation mail
 
@@ -38,6 +42,8 @@ What is not solved: if the server crashes while a mail is being sent, that mail 
 - `GET /api/stats`
 
 To stay correct after changes, every write (create, update or delete an event, new registration) clears the whole cache before the response is sent. I clear everything because one registration changes the event, the registration list and the stats at the same time, so clearing only one key would leave old data. A 404 or a database error is not cached.
+
+One more case: a GET can still be loading from the database while a registration happens. Its result is then already old, so it should not go into the cache. The cache keeps a version number that goes up on every `clear()`, and it only saves a value when the version did not change during the load.
 
 I used an in-memory cache and not Redis because the app runs as one process, so no extra service is needed. With more servers, Redis would be the next step.
 
