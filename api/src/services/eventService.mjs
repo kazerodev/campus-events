@@ -1,4 +1,4 @@
-import { notFound } from '../errors/AppError.mjs';
+import { conflict, notFound } from '../errors/AppError.mjs';
 
 export function createEventService({ events, registrations, cache }) {
   return {
@@ -22,6 +22,13 @@ export function createEventService({ events, registrations, cache }) {
     },
 
     async update(id, data) {
+      // Lowering the capacity below the people already registered would give more than 100% occupancy.
+      if (data.capacity !== undefined) {
+        const registered = await registrations.countByEvent(id);
+        if (registered > data.capacity) {
+          throw conflict(`${registered} people are already registered, capacity must be at least ${registered}`);
+        }
+      }
       const event = await events.update(id, data);
       if (!event) throw notFound(`Event with id ${id} not found`);
       cache.clear();

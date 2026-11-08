@@ -64,4 +64,15 @@ describe('confirmation mail', () => {
     assert.equal(again.status, 409);
     assert.equal(sent.length, 1);
   });
+
+  it('still answers 201 when the mailer throws right away instead of rejecting', async () => {
+    const mailer = { sendRegistrationConfirmation() { throw new Error('mailer is broken'); } };
+    const { app } = await createTestApp({ mailer });
+
+    const { res, url } = await registerAda(app);
+    const list = await request(app).get(url);
+
+    assert.equal(res.status, 201);
+    assert.equal(list.body.length, 1);
+  });
 });

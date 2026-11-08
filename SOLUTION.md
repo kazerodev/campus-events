@@ -23,12 +23,20 @@ Bugs I found and fixed (each one has a test):
 - The capacity check used `count > capacity`, so an event with 2 seats accepted 3 people. Now it is `>=`.
 - When 5 people registered at the same moment for the last seat, all 5 got in, and the same email sent 3 times at once was stored 3 times. The code first checks and then saves, and other requests could run in between. Now registrations run one by one (a small queue in `registrationService`), so the check and the save always happen together. This works because the app runs as one process, the same reason the cache can live in memory.
 - When a field was missing, the message was technical ("expected string, received undefined"). Now it says "Enter a title", like the other messages.
+- `startsAt: null`, `true` or a number was accepted and saved as a date in 1970, because `z.coerce.date()` turns anything into a date. Now `startsAt` must be a string first.
+- The capacity could be changed to less than the people already registered (3 people, capacity 1 gave "300%" in the stats). Now that `PATCH` returns `409`.
+- A body bigger than 100 kB gave a `500 Something went wrong`. Now it is a `413` with the normal error format.
 
 ## 2. Confirmation mail
 
 In `registrationService.register()` the registration is saved first. After that the mail is started without `await`, and `.catch()` only logs a warning if it fails. So if the mail provider is slow or offline, the registration is already stored and the user still gets a `201`.
 
 `mail/mailer.mjs` uses nodemailer when `SMTP_URL` is set. Without it, it uses the slow lab mailer from `api/lab/mail.mjs`, which only writes to the log. That is what the live version uses.
+
+Two cases I only found later while testing:
+
+- A mailer that throws right away (instead of returning a rejected promise) skipped the `.catch()`, so the user got a `500` while the registration was already saved. If they tried again they got "already registered". Now the call is wrapped in `Promise.resolve().then(...)`, so every error ends up in the same `.catch()`.
+- A wrong `SMTP_URL` made `nodemailer.createTransport()` throw at startup, so the whole API was down because of the mail settings. Now it logs a warning and uses the lab mailer.
 
 What is not solved: if the server crashes while a mail is being sent, that mail is lost. A queue (RabbitMQ, part 4) would fix that.
 
