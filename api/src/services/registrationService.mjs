@@ -16,9 +16,11 @@ export function createRegistrationService({ events, registrations, cache, mailer
     return event;
   }
 
+  // Promise.resolve().then() also catches a mailer that throws right away instead of rejecting,
+  // otherwise that error would turn a stored registration into a 500.
   function sendConfirmation(event, registration) {
-    mailer
-      .sendRegistrationConfirmation({ email: registration.email, name: registration.name, event })
+    Promise.resolve()
+      .then(() => mailer.sendRegistrationConfirmation({ email: registration.email, name: registration.name, event }))
       .catch((err) => logger.warn('confirmation mail failed', { registrationId: registration.id, error: err.message }));
   }
 

@@ -56,4 +56,19 @@ describe('capacity', () => {
 
     assert.equal(res.status, 201);
   });
+
+  it('refuses to lower the capacity below the people already registered', async () => {
+    const created = await request(app).post('/api/events').send(validEvent({ capacity: 3 }));
+    const id = created.body.id;
+    for (const email of ['ada@example.com', 'grace@example.com']) {
+      await request(app).post(`/api/events/${id}/registrations`).send({ name: 'Student', email });
+    }
+
+    const tooLow = await request(app).patch(`/api/events/${id}`).send({ capacity: 1 });
+    const exact = await request(app).patch(`/api/events/${id}`).send({ capacity: 2 });
+
+    assert.equal(tooLow.status, 409);
+    assert.equal(exact.status, 200);
+    assert.equal(exact.body.capacity, 2);
+  });
 });
